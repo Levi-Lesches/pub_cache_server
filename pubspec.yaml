@@ -1,14 +1,13 @@
 name: pub_cache_server
-description: A sample command-line application.
+description: A Pub server that serves from your device's Pub cache
 version: 1.0.0
-# repository: https://github.com/my_org/my_repo
+repository: https://github.com/Levi-Lesches/pub_cache_server
 
 environment:
   sdk: ^3.5.4
 
 # Add regular dependencies here.
 dependencies:
-  archive: ^3.6.1
   args: ^2.6.0
   path: ^1.9.1
   shelf: ^1.4.2
