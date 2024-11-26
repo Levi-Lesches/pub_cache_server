@@ -1,4 +1,3 @@
-
 import "dart:io";
 
 import "package:tar/tar.dart";
@@ -32,7 +31,8 @@ Stream<TarEntry> getTarEntries(Directory source, String outputName) async* {
 }
 
 /// Creates a compressed tarball (`.tar.gz` file) for the given source at the given location.
-Future<void> makeTarball(Directory source, File outputFile) => getTarEntries(source, outputFile.filename)
-  .transform(tarWriter)
-  .transform(gzip.encoder)
-  .pipe(outputFile.openWrite());
+Future<void> makeTarball(Directory source, File outputFile) =>
+    getTarEntries(source, outputFile.filename)
+        .transform(tarWriter)
+        .transform(gzip.encoder)
+        .pipe(outputFile.openWrite());

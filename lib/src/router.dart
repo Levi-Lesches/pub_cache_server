@@ -17,20 +17,22 @@ extension on Directory {
 typedef Json = Map<String, dynamic>;
 
 /// Fixes a URL to point to this host and port instead of the real Pub.
-String fixupUrl(String url) => Uri.parse(url).replace(
-  scheme: "http",
-  host: Constants.host,
-  port: Constants.port,
-).toString();
+String fixupUrl(String url) => Uri.parse(url)
+    .replace(
+      scheme: "http",
+      host: Constants.host,
+      port: Constants.port,
+    )
+    .toString();
 
 /// Returns the given JSON as an HTTP 200 OK response.
 Response okJson(Json json) => Response.ok(jsonEncode(json));
 
 /// Returns the security advisories, which are all blank.
 Response getAdvisories(Request request) => okJson({
-  "advisories": const <void>[],
-  "advisoriesUpdated": DateTime.now().toIso8601String(),
-});
+      "advisories": const <void>[],
+      "advisoriesUpdated": DateTime.now().toIso8601String(),
+    });
 
 /// Gets info about all the versions of a given package.
 ///
@@ -41,7 +43,11 @@ Response getAdvisories(Request request) => okJson({
 /// - returns the remaining data as-is
 Response getVersions(Request request, String package) {
   final cache = File("${Constants.pubCache}/.cache/$package-versions.json");
-  if (!cache.existsSync()) return Response.notFound("This server does not have any versions of $package");
+  if (!cache.existsSync()) {
+    return Response.notFound(
+      "This server does not have any versions of $package",
+    );
+  }
   final versionContents = cache.readAsStringSync();
   final versionData = jsonDecode(versionContents) as Json;
   for (final version in versionData["versions"]) {
@@ -57,12 +63,18 @@ Response getVersions(Request request, String package) {
 /// - Finds the package and version in the user's Pub cache, or returns an HTTP 404
 /// - If the tarball does not exist, make it using [makeTarball] and cache it
 /// - Return the tarball as-is
-Future<Response> getTarball(Request request, String package, String version) async {
+Future<Response> getTarball(
+  Request request,
+  String package,
+  String version,
+) async {
   package = Uri.decodeFull(package);
   version = Uri.decodeFull(version);
   final packageDir = Directory("${Constants.pubCache}\\$package-$version");
   if (!packageDir.existsSync()) {
-    return Response.notFound("This server does not have version $version of $package");
+    return Response.notFound(
+      "This server does not have version $version of $package",
+    );
   }
   final tarballsDir = Directory("${Constants.pubCache}/.tarballs");
   tarballsDir.createSync();
