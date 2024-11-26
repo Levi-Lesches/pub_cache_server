@@ -9,6 +9,11 @@ environment:
 # Add regular dependencies here.
 dependencies:
   archive: ^3.6.1
+  args: ^2.6.0
+  path: ^1.9.1
+  shelf: ^1.4.2
+  shelf_router: ^1.1.4
+  tar: ^2.0.0
 
 dev_dependencies:
   very_good_analysis: ^6.0.0

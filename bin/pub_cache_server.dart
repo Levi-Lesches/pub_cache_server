@@ -1,59 +1,47 @@
-import "dart:convert";
+// ignore_for_file: avoid_print, parameter_assignments
+
 import "dart:io";
-import "dart:typed_data";
 
-import "package:archive/archive_io.dart";
+import "package:pub_cache_server/src/constants.dart";
+import "package:shelf/shelf_io.dart" as shelf_io;
+import "package:args/args.dart";
 
-const pubCache = r"D:\.tools\pub\hosted\pub.dev";
-const host = "0.0.0.0";
-const port = 8000;
+import "package:pub_cache_server/pub_cache_server.dart";
 
-extension on Directory {
-  String operator /(String other) => "$path/$other";
-}
-
-typedef Json = Map<String, dynamic>;
-
-void main() {
-  print("Hello, World! s");
-}
-
-Json getAdvisories(_) => {
-  "advisories": const <void>[],
-  "advisoriesUpdated": DateTime.now().toIso8601String(),
-};
-
-Json? getVersions(String package) {
-  final cache = File("$pubCache/.cache/$package-versions.json");
-  if (!cache.existsSync()) return null;
-  final versionContents = cache.readAsStringSync();
-  final versionData = jsonDecode(versionContents);
-  int? versionNumber;
-  for (final version in versionData["versions"]) {
-    versionNumber = version["version"] as int;
-    version["archive_url"] = "http://$host:$port/api/archives/$package-$versionNumber.tar.gz";
-    version["archive_sha256"] = null;
+void main(List<String> args) async {
+  final parser = ArgParser();
+  parser.addOption("cache", abbr: "c", help: "The path to your Pub cache. Can be omitted if the PUB_CACHE environment variable is set");
+  parser.addOption("address", abbr: "a", defaultsTo: "127.0.0.1", help: "The address to host the server on");
+  parser.addOption("port", abbr: "p", defaultsTo: "8000", help: "The port to host the server on");
+  parser.addFlag("help", abbr: "h", negatable: false, help: "Show this help message");
+  final results = parser.parse(args);
+  if (results.flag("help")) {
+    print("\nUsage: pub_cache_server [--cache <cache-dir>] [--port <port>] [--address <address>]\n");
+    print(parser.usage);
+    exit(0);
   }
-  versionData["archive_url"] = "http://$host:$port/api/archives/$package-$versionNumber.tar.gz";
-  versionData["archive_sha256"] = null;
-  return versionData;
-}
-
-Uint8List? getTarball(String package, String version) {
-  final packageDir = Directory("$pubCache\\$package-$version");
-  if (!packageDir.existsSync()) return null;
-  final tarballsDir = Directory(packageDir / ".tarballs");
-  tarballsDir.createSync();
-  final output = File(tarballsDir / "$package-$version.tar.gz");
-  if (!output.existsSync()) makeTarball(packageDir, output);
-  return output.readAsBytesSync();
-}
-
-void makeTarball(Directory source, File outputFile) {
-  final archive = createArchiveFromDirectory(source);
-  final encoder = GZipEncoder();
-  final tar = TarEncoder();
-  final output = OutputFileStream.withFileHandle(FileHandle.fromFile(outputFile));
-  tar.encode(archive);
-  encoder.encode(archive, output: output);
+  final portNumber = int.tryParse(results.option("port") ?? "");
+  if (portNumber == null || portNumber < 0) {
+    print("Port number must be a positive integer");
+    exit(1);
+  }
+  final cacheEnv = Platform.environment["PUB_CACHE"];
+  final resolvedCache = results.option("cache") ?? cacheEnv;
+  if (resolvedCache == null) {
+    print("Error: If you omit --cache, you must define the PUB_CACHE environment variable");
+    exit(2);
+  }
+  Constants.init(
+    pubCache: resolvedCache,
+    host: results.option("address")!,
+    port: portNumber,
+  );
+  if (!Directory(Constants.pubCache).existsSync()) {
+    print("Error: Could not find a Pub Cache at ${Constants.pubCache}");
+    exit(3);
+  }
+  final router = getRouter();
+  await shelf_io.serve(router.call, Constants.host, Constants.port);
+  print("\nPub server started on ${Constants.host}:${Constants.port}");
+  print("- Serving files from ${Constants.pubCache}\n");
 }
