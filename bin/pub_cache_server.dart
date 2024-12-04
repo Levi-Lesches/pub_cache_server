@@ -10,26 +10,41 @@ import "package:pub_cache_server/pub_cache_server.dart";
 
 void main(List<String> args) async {
   final parser = ArgParser();
-  parser.addOption("cache",
-      abbr: "c",
-      help:
-          "The path to your Pub cache. Can be omitted if the PUB_CACHE environment variable is set");
-  parser.addOption("address",
-      abbr: "a",
-      defaultsTo: "127.0.0.1",
-      help: "The address to host the server on");
-  parser.addOption("port",
-      abbr: "p", defaultsTo: "8000", help: "The port to host the server on");
-  parser.addOption("domain",
-      abbr: "d",
-      defaultsTo: "pub.dev",
-      help: "The domain of the online Pub server you use");
-  parser.addFlag("help",
-      abbr: "h", negatable: false, help: "Show this help message");
+  parser.addOption(
+    "cache",
+    abbr: "c",
+    help: "The path to your Pub cache. "
+        "Can be omitted if the PUB_CACHE environment variable is set",
+  );
+  parser.addOption(
+    "address",
+    abbr: "a",
+    defaultsTo: "127.0.0.1",
+    help: "The address to host the server on",
+  );
+  parser.addOption(
+    "port",
+    abbr: "p",
+    defaultsTo: "8000",
+    help: "The port to host the server on",
+  );
+  parser.addOption(
+    "domain",
+    abbr: "d",
+    defaultsTo: "pub.dev",
+    help: "The domain of the online Pub server you use",
+  );
+  parser.addFlag(
+    "help",
+    abbr: "h",
+    negatable: false,
+    help: "Show this help message",
+  );
   final results = parser.parse(args);
   if (results.flag("help")) {
     print(
-        "\nUsage: pub_cache_server [--cache <cache-dir>] [--port <port>] [--address <address>]\n");
+      "\nUsage: pub_cache_server [--cache <cache-dir>] [--port <port>] [--address <address>]\n",
+    );
     print(parser.usage);
     exit(0);
   }
@@ -42,7 +57,8 @@ void main(List<String> args) async {
   final resolvedCache = results.option("cache") ?? cacheEnv;
   if (resolvedCache == null) {
     print(
-        "Error: If you omit --cache, you must define the PUB_CACHE environment variable");
+      "Error: If you omit --cache, you must define the PUB_CACHE environment variable",
+    );
     exit(2);
   }
   Constants.init(
