@@ -11,7 +11,8 @@ extension on File {
 Stream<TarEntry> getTarEntries(Directory source, String outputName) async* {
   await for (final entry in source.list(recursive: true)) {
     if (entry is! File) continue;
-    final name = p.relative(entry.path, from: source.path);
+    final name =
+        p.posix.relative(entry.path, from: source.path).replaceAll(r"\", "/");
     if (name.startsWith(".")) continue;
     if (name == outputName) continue;
     final stat = entry.statSync();

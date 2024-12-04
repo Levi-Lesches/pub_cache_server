@@ -1,6 +1,6 @@
 name: pub_cache_server
 description: A Pub server that serves from your device's Pub cache. Can be used for serving packages to an otherwise-offline device
-version: 1.0.0
+version: 1.0.1
 repository: https://github.com/Levi-Lesches/pub_cache_server
 
 environment:
