@@ -4,15 +4,24 @@ import "package:tar/tar.dart";
 import "package:path/path.dart" as p;
 
 extension on File {
-  String get filename => path.split("/").last;
+  String get filename => path.split(r"/|\").last;
 }
+
+/// Returns the tar entry name for [entry] as the file directory relative to [source]
+///
+/// This has the same logic as [p.Context.relative], however this allows `\` and `/`
+/// to be used as path separators simultaneously
+String getTarEntryName(FileSystemEntity entry, Directory source) =>
+    p.posix.relative(
+      entry.path.replaceAll(r"\", "/"),
+      from: source.path.replaceAll(r"\", "/"),
+    );
 
 /// Returns the contents of a directory as a stream of Tar file entries.
 Stream<TarEntry> getTarEntries(Directory source, String outputName) async* {
   await for (final entry in source.list(recursive: true)) {
     if (entry is! File) continue;
-    final name =
-        p.posix.relative(entry.path, from: source.path).replaceAll(r"\", "/");
+    final name = getTarEntryName(entry, source);
     if (name.startsWith(".")) continue;
     if (name == outputName) continue;
     final stat = entry.statSync();
