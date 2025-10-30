@@ -50,8 +50,10 @@ Response getVersions(Request request, String package) {
   }
   final versionContents = cache.readAsStringSync();
   final versionData = jsonDecode(versionContents) as Json;
-  for (final version in versionData["versions"]) {
-    version["archive_url"] = fixupUrl(version["archive_url"]);
+  final versionsList = (versionData["versions"] as List).cast<Json>();
+  for (final version in versionsList) {
+    final archiveUrl = version["archive_url"] as String;
+    version["archive_url"] = fixupUrl(archiveUrl);
     version["archive_sha256"] = null;
   }
   return okJson(versionData);

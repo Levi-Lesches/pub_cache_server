@@ -13,7 +13,7 @@ analyzer:
     # which happens all the time in JSON.
     #
     # See https://github.com/dart-lang/language/blob/main/resources/type-system/strict-casts.md
-    strict-casts: false
+    strict-casts: true
 
     # Don't let any types be inferred as `dynamic`.
     #
