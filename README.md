@@ -1,75 +1,69 @@
 # pub_cache_server
 
-A Pub server that serves packages from your Pub cache.
+A Pub server that serves packages from your device's local Pub cache.
 
-### Usage
+This can be a useful tool for when a remote device needs to run `dart pub get` but cannot access pub.dev or the package(s) you need are not on pub.dev. Instead, this tool can be used to redirect all pub commands to a host device on your network that does have the packages you need.
 
-To install,
+For example – you need to install packages on a Rasberry Pi in the middle of the desert with no internet, but you have a laptop and _prep time_:
+- First, install packages on your own laptop using `dart pub get` as normal
+- Once you're offline, run this tool to turn your laptop into a Pub server
+- Now the Pi can install any packages it needs – as long as your laptop already has them
 
+On your laptop (the host device):
 ```bash
+# Download this package
 dart pub global activate pub_cache_server
+# Get the packages for yourself first
+dart pub get
+# Start the server
+pub_cache_server -a 192.168.1.10
 ```
 
-Then, run at any time using
-```bash
-pub_cache_server
-```
-or
-```bash
-dart pub global run pub_cache_server
-```
+Make sure to use your own IP address for the last line. By default, the server runs on port 8000, but you can change that with the `-p` option.
 
-This will run the server on `localhost:8000` by default (pass `-h` for more options). Now, tell Pub to use this server instead of Pub.dev:
-
+On the Raspberry Pi (the remote device):
 ```bash
-# On Unix:
-export PUB_HOSTED_URL=http://localhost:8000
-# On Windows:
-set PUB_HOSTED_URL=http://localhost:8000
-```
-
-Running any `dart pub` command will fetch from the cache server instead of Pub.dev. Note that these examples show how to run the server on localhost. You can also run the server across devices, like this:
-
-```bash
-pub_cache_server -a 192.168.1.10 -p 8005
-export PUB_HOSTED_URL=http://192.168.1.10:8005
+# On the remote device, change the Pub URL to your laptop's IP
+export PUB_HOSTED_URL=http://192.168.1.10:8000
+# Run dart pub commands as normal
+dart pub get
 ```
 
 ### Important notes
 
-- Make sure that your `PUB_HOSTED_URL` is `http://`. _not_ `https://`
-- If running across devices, make sure that your devices can at least ping each other
+- Make sure that your `PUB_HOSTED_URL` is `http://`, _not_ `https://`
+- Make sure that your devices can at least ping each other
+- If you run into issues on the remote device, try using `dart pub get --verbose` to see where the errors happen
 - The server will serve directly from your own Pub cache and works entirely offline. This means it cannot possibly serve a package you yourself don't have. To make sure you are prepared for an offline scenario, run `dart pub get` in all the projects you will need before going offline. This will make sure you have all the files needed in order to provide them to the offline device.
 
-### Example
-
-Say your device is `192.168.1.10` and you need to serve packages to a Raspberry Pi device on `192.168.1.20`. In this scenario, your device has Internet but the Pi does not. Here's how you'd work with that:
-
-```bash
-# Download this package
-> dart pub global activate pub_cache_server
-# Get the packages for yourself first
-> cd dart_project
-> dart pub get
-# Start the server
-> pub_cache_server -a 192.168.1.10
-```
-```bash
-# Connect to the Raspberry Pi
-> ssh pi@192.168.1.20
-> # Enter password for user pi
-# In the Raspberry Pi, change the Pub URL
-$ export PUB_HOSTED_URL=http://192.168.1.10:8000
-# Run dart pub commands as normal
-$ cd dart_project
-$ dart pub get  # will pull from
-```
-
 ### Limitations
-These are not fundamental limitations, just features I don't need. If you have a use-case, [open an issue](https://github.com/Levi-Lesches/pub_cache_server/issues/new/choose) for them.
+
+These are not fundamental limitations, just features I don't need. If these are a blocked for you, consider opening an issue or Pull Request on GitHub.
 - This package does not yet support publishing to the local server.
+
 - This package only pulls from your hosted cache, so it cannot serve from other sources, such as path, or Git.
-  - You may specify other Pub servers by, eg `-d pub.dev`
+
+  - For local packages, consider: 
+
+    - using SCP to copy them to the remote device and use a `path` dependency
+    - if the package is only relevant to one project, embed it in the project using a Pub Workspace
+
+  - For local packages under active development, consider using `git push` over SSH: 
+
+    - use SCP to copy them to the remote device and use a `path` dependency
+
+    - If you need to make changes to the repository, push the package from the host to the remote:
+
+      ```bash
+      # On the host device, using the remote device's IP
+      git remote add pi user@192.168.1.20:~/pkg  # one-time
+      git push pi main  # when you want to update the remote device
+      ```
+
+    - it is not recommended to use a `git` dependency with the host IP in the URL, since that will commit your host's IP in your source control
+
+- This package assumes hosted packages were downloaded from Pub.dev, as this affects which folder they're in
+
+  - You may specify other Pub servers, eg, `pub_cache_server -d onepub.dev`
   - You may only specify one Pub server at a time
-  - If you have the files locally, consider using `scp` or `git` to push the files to the remote device and use a `path: ` dependency override to get them.
 

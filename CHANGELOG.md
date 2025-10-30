@@ -1,3 +1,6 @@
+## 1.0.3
+- Fixed Pub scores
+
 ## 1.0.2
 
 - Fixed bug where tarballs would be empty when serving from Windows
