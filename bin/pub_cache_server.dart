@@ -1,4 +1,5 @@
-// ignore_for_file: avoid_print, parameter_assignments
+// Main file needs to print logs
+// ignore_for_file: avoid_print
 
 import "dart:io";
 
